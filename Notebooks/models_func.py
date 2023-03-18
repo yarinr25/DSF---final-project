@@ -10,6 +10,10 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedShuffleSplit
 import seaborn as sns
 from scipy import stats
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.base import BaseEstimator, TransformerMixin
+
 
 
 import math
@@ -57,6 +61,13 @@ def strat_split(df, test_size, random_state):
         set_.drop('Curr Price', axis= 1, inplace= True)
     return strat_train_set, y_train, strat_test_set , y_test
 
+def Checkin_day(df):
+    df_copy = df.copy()
+    df_copy['Checkin Day of week'] = df_copy.apply(lambda x: 2 if x['Monday'] == 1 else 4 if x['Wednesday'] == 1 else 6 ,axis=1)
+    df_copy['Checkin Day of week'] = df_copy.apply(lambda x:(x['Checkin Day of week'] + x['TTT']) % 7,axis=1)
+    df_copy['Checkin Day of week'].replace(0,7, inplace=True)
+    return df_copy
+
 def residual_plot(model , X_train ,X_test, y_train,y_test):    
      y_train_pred = model.predict(X_train)    
      y_test_pred = model.predict(X_test)       
@@ -64,11 +75,11 @@ def residual_plot(model , X_train ,X_test, y_train,y_test):
      train_residuals = y_train_pred - y_train    
      test_residuals = y_test_pred - y_test     
      plt.scatter(y_train_pred, train_residuals, c='blue', marker='o', label='Training data')     
-     plt.scatter(y_test_pred, test_residuals, c='green', marker='s', label='Testing data')     
+     plt.scatter(y_test_pred, test_residuals, c='green', marker='s', label='Testing data', alpha=0.1)     
      plt.xlabel('Predicted values')     
      plt.ylabel('Residuals')     
      plt.legend(loc='upper left')     
-     plt.hlines(y=0, xmin=0, xmax=50, lw=2, color='red')     
+     plt.hlines(y=0, xmin=0,xmax=700, lw=2, color='red')     
      plt.show()      
      # Create a residual histogram using seaborn for the training set     
       
@@ -88,6 +99,12 @@ def residual_plot(model , X_train ,X_test, y_train,y_test):
      plt.title("Residual Histogram (Test Set)")    
      plt.legend()    
      plt.show()
+     
+     
+'''--------------------------------------Pipelines----------------------------------------------'''
+
+standartize = Pipeline([('std_scaler', StandardScaler())])
+
      
 '''--------------------------------------linear regression----------------------------------------------'''
      
@@ -172,7 +189,7 @@ def xgb_hyperparameter(X_train, y_train):
     hyperparameter = {
     'n_estimators': [100,500,900,1100,1500],
     'max_depth': [2,3,5,10,15],
-    'lerning_rate': [0.05,0.1,0.15,0.2],
+    'eta': [0.05,0.1,0.15,0.2] , #learning rate
     'min_child_weight': [1,2,3,4],
     'booster': ['gbtree','gblinear'],
     'base_score': [0.025,0.5,0.75,1]    
