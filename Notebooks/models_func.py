@@ -120,19 +120,22 @@ def feature_importances_LinearRegression(model,X_train):
 def Tree_hyperparameters(X_train, y_train):
     # Define parameter grid to search
     param_grid={"splitter":["best","random"],
-                "max_depth" : [2,3,4,5],
+                "max_depth" : [2,3,4,5,6],
                 "min_samples_leaf":[1,10,20,30,40],
                 "max_leaf_nodes":[2,10,20,30,40,] }
 
 
     Tree = DecisionTreeRegressor()
     
+    # fit gridsearchcv
     grid_search = GridSearchCV(Tree, param_grid, scoring='r2', cv = 5, verbose=5)
     grid_search.fit(X_train, y_train)
     
+    # Print best parameters and best score
     print('Best Parameters:', grid_search.best_params_)
     print('Best Score:', grid_search.best_score_)
 
+    # create Tree using best parameters
     Tree_best = DecisionTreeRegressor(**grid_search.best_params_)
     return Tree_best
     
