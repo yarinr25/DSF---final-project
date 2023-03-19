@@ -120,11 +120,11 @@ def feature_importances_LinearRegression(model,X_train):
 def Tree_hyperparameters(X_train, y_train):
     # Define parameter grid to search
     param_grid={"splitter":["best","random"],
-                "max_depth" : [1,3,5,7,9,11,12],
-                "min_samples_leaf":[1,2,3,4,5,6,7,8,9,10],
-                "min_weight_fraction_leaf":[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9],
-                "max_features":["auto","log2","sqrt",None],
-                "max_leaf_nodes":[None,2,10,20,30,40,50,60,70,80,90] }
+                "max_depth" : [2,3,4,5],
+                "min_samples_leaf":[1,10,20,30,40],
+                "max_leaf_nodes":[2,10,20,30,40,] }
+
+
     Tree = DecisionTreeRegressor()
     
     grid_search = GridSearchCV(Tree, param_grid, scoring='r2', cv = 5, verbose=5)
