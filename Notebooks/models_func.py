@@ -5,6 +5,7 @@ from xgboost import XGBRegressor
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, RBF , ExpSineSquared , WhiteKernel ,Matern,Sum,Product
 from sklearn.model_selection import train_test_split ,GridSearchCV, RandomizedSearchCV
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedShuffleSplit
@@ -116,8 +117,26 @@ def feature_importances_LinearRegression(model,X_train):
         
 
 '''--------------------------------------Decision Tree----------------------------------------------'''
- 
- 
+def Tree_hyperparameters(X_train, y_train):
+    # Define parameter grid to search
+    param_grid={"splitter":["best","random"],
+                "max_depth" : [1,3,5,7,9,11,12],
+                "min_samples_leaf":[1,2,3,4,5,6,7,8,9,10],
+                "min_weight_fraction_leaf":[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9],
+                "max_features":["auto","log2","sqrt",None],
+                "max_leaf_nodes":[None,2,10,20,30,40,50,60,70,80,90] }
+    Tree = DecisionTreeRegressor()
+    
+    grid_search = GridSearchCV(Tree, param_grid, scoring='r2', cv = 5, verbose=5)
+    grid_search.fit(X_train, y_train)
+    
+    print('Best Parameters:', grid_search.best_params_)
+    print('Best Score:', grid_search.best_score_)
+
+    Tree_best = DecisionTreeRegressor(**grid_search.best_params_)
+    return Tree_best
+    
+
  
  
 '''--------------------------------------Gaussian Process Regression----------------------------------------------'''
