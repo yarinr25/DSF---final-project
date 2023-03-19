@@ -102,11 +102,24 @@ def residual_plot(model , X_train ,X_test, y_train,y_test):
      plt.show()
      
      
+def feature_importance_with_drop(model, X_train, y_train, X_test, y_test):
+    feature_importances_dict = {}
+    for col in X_train.columns:
+        new_model = model
+        new_model.fit(X_train.drop(col , axis = 1), y_train)
+        
+        y_test_pred = new_model.predict(X_test.drop(col , axis = 1))
+        test_r2 = r2_score(y_test, y_test_pred)
+        feature_importances_dict[col] = 1-test_r2
+    sorted_feature_importances_dict = sorted(feature_importances_dict.items(), key=lambda x:x[1], reverse=True)
+    for i in sorted_feature_importances_dict:
+        print(i)
+
 '''--------------------------------------Pipelines----------------------------------------------'''
 
 standartize = Pipeline([('std_scaler', StandardScaler())])
 
-     
+
 '''--------------------------------------linear regression----------------------------------------------'''
      
 #receives a trained model
@@ -166,11 +179,11 @@ def gp_hyperparameters(X_train, y_train):
     best_score = -np.inf
     for i, kernel in enumerate(kernels):
         gp = GaussianProcessRegressor(kernel=kernel)
-        random_search  = RandomizedSearchCV(gp, hyperparameters[i],scoring='r2',n_iter=10 ,verbose=5, cv=5)
-        random_search.fit(X_train, y_train)
-        if random_search.best_score_ > best_score:
-            best_score = random_search.best_score_
-            best_kernel = random_search.best_estimator_.kernel_
+        grid_search  = GridSearchCV(gp, hyperparameters[i],scoring='r2',verbose=5, cv=4)
+        grid_search.fit(X_train, y_train)
+        if grid_search.best_score_ > best_score:
+            best_score = grid_search.best_score_
+            best_kernel = grid_search.best_estimator_.kernel_
 
     # Fit the Gaussian process to the data with the best kernel and hyperparameters
     gp = GaussianProcessRegressor(kernel=best_kernel)
