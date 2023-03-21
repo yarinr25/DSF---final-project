@@ -166,9 +166,15 @@ standartize = Pipeline([('std_scaler', StandardScaler())])
 #receives a trained model
 def feature_importances_LinearRegression(model,X_train):
     # Print feature coefficients
+    feature_coef_dict = {}
     for feature, coef in zip(X_train.columns, model.coef_):
-        print("{} coefficient: {:.3f}".format(feature, coef))
-        
+        feature_coef_dict[feature] = coef
+        #print("{} coefficient: {:.3f}".format(feature, coef))
+    sorted_feature_importances_dict = sorted(feature_coef_dict.items(), key=lambda x:x[1], reverse=True)
+    for i in sorted_feature_importances_dict:
+        print(i)
+
+    
 
 '''--------------------------------------Decision Tree----------------------------------------------'''
 def Tree_hyperparameters(X_train, y_train):
