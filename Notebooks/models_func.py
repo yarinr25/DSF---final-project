@@ -50,12 +50,9 @@ def metrics_f(model , X_train ,X_test, y_train,y_test):
 # recieves a dataframe , test size and random state and do stratify split by the Grade column 
 def strat_split(df, test_size, random_state):
     split = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=random_state)
-    df['Grade_cat'] = pd.cut(df['Grade'], bins=[5,6,7, 8, 9,10], labels=['very low', 'low','medium', 'high', 'very high'])
-    for train_index, test_index in split.split(df, df['Grade_cat']):
+    for train_index, test_index in split.split(df, df['LOS']):
         strat_train_set = df.iloc[train_index]
         strat_test_set = df.iloc[test_index]
-    for set_ in [df,strat_train_set, strat_test_set]:
-        set_.drop('Grade_cat', axis= 1, inplace= True)
     y_train = strat_train_set['Curr Price'].copy()
     y_test = strat_test_set['Curr Price'].copy()
     for set_ in [strat_train_set, strat_test_set]:
@@ -273,7 +270,7 @@ def knn_hyperparameter(X_train, y_train):
 def xgb_hyperparameter(X_train, y_train):
     hyperparameter = {
     'n_estimators': [100,500,900,1100,1500],
-    'max_depth': [2,3,5,10,15],
+    'max_depth': [2,3,5],
     'eta': [0.05,0.1,0.15,0.2] , #learning rate
     'min_child_weight': [1,2,3,4],
     'booster': ['gbtree','gblinear'],
