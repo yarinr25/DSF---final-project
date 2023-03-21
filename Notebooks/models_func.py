@@ -14,7 +14,7 @@ from scipy import stats
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
-
+from sklearn.linear_model import ElasticNet
 
 
 import math
@@ -115,6 +115,50 @@ def feature_importance_with_drop(model, X_train, y_train, X_test, y_test):
     for i in sorted_feature_importances_dict:
         print(i)
 
+
+#get x_train and y_train for liner model
+def hyper_feature( model_with_params , X , y):
+    best_r2 = -float('inf')
+    best_feature = None 
+    
+
+    for col in X.columns: 
+        # squared the col
+        col_squared = X[col] ** 2
+        # new df 
+        df_new = pd.concat([X.drop(col,axis=1), col_squared.rename(col + '_squared')], axis=1)
+        #split the data
+        X_train, X_test, y_train, y_test = train_test_split(df_new,y, test_size=0.3, random_state=42)
+
+        model = model_with_params
+
+        model.fit(X_train, y_train)
+
+        r2 = r2_score( y_test, model.predict(X_test))
+        #save the best result
+        if r2 > best_r2:
+            best_r2 = r2
+            best_feature = col
+            
+
+        # Print the R-squared value of the model for the current feature
+        print(f"Feature_squared: {col}, R-squared: {r2}")
+
+    # Print the best feature squared and best R-squared value
+    print(f"Best feature_squared: {best_feature}, Best R-squared: {best_r2}")
+    return best_feature
+
+
+def feature_squared_score( model_with_params ,col, X_train ,X_test, y_train ,y_test):
+    col_squared_train = X_train[col] ** 2
+    X_train_new = pd.concat([X_train.drop(col,axis=1), col_squared_train.rename(col + '_squared')], axis=1)
+    col_squared_test = X_test[col] ** 2
+    X_test_new = pd.concat([X_test.drop(col,axis=1), col_squared_test.rename(col + '_squared')], axis=1)
+    model = model_with_params
+    model.fit(X_train_new,y_train)
+    print(r2_score(y_test, model.predict(X_test_new)))
+    
+
 '''--------------------------------------Pipelines----------------------------------------------'''
 
 standartize = Pipeline([('std_scaler', StandardScaler())])
@@ -179,11 +223,11 @@ def gp_hyperparameters(X_train, y_train):
     best_score = -np.inf
     for i, kernel in enumerate(kernels):
         gp = GaussianProcessRegressor(kernel=kernel)
-        grid_search  = GridSearchCV(gp, hyperparameters[i],scoring='r2',verbose=5, cv=4)
-        grid_search.fit(X_train, y_train)
-        if grid_search.best_score_ > best_score:
-            best_score = grid_search.best_score_
-            best_kernel = grid_search.best_estimator_.kernel_
+        Random_search  = RandomizedSearchCV(gp, hyperparameters[i],scoring='r2',verbose=5, cv=2, n_iter = 25)
+        Random_search.fit(X_train, y_train)
+        if Random_search.best_score_ > best_score:
+            best_score = Random_search.best_score_
+            best_kernel = Random_search.best_estimator_.kernel_
 
     # Fit the Gaussian process to the data with the best kernel and hyperparameters
     gp = GaussianProcessRegressor(kernel=best_kernel)
@@ -243,4 +287,24 @@ def xgb_hyperparameter(X_train, y_train):
     xgb_best = XGBRegressor(**random_search.best_params_)
     return xgb_best
 
-'''--------------------------------------???----------------------------------------------'''
+'''--------------------------------------ElasticNet----------------------------------------------'''
+
+def  ElasticNet_hyperparameter(X_train, y_train):
+    # Set up the grid search parameters
+    param_grid = {'alpha': [0.1, 0.5 , 1.0, 2.0, 4.0, 6.0, 8.0 ,10.0],
+                  'l1_ratio': [0.1,0.3 , 0.5,0.7, 0.9]}
+
+    enet = ElasticNet()
+
+    grid_search = GridSearchCV(enet, param_grid,scoring='r2', verbose=5, cv=5)
+ 
+    # fit gridsearchcv
+    grid_search.fit(X_train, y_train)
+
+    # Print best parameters and best score
+    print('Best Parameters:', grid_search.best_params_)
+    print('Best Score:', grid_search.best_score_)
+
+    # create ElasticNet_best using best parameters
+    enet_best = ElasticNet(**grid_search.best_params_)
+    return enet_best
