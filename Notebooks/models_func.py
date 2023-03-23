@@ -15,6 +15,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.linear_model import ElasticNet
+from sklearn.ensemble import RandomForestRegressor
 
 
 import math
@@ -66,7 +67,7 @@ def Checkin_day(df):
     df_copy['Checkin Day of week'].replace(0,7, inplace=True)
     return df_copy
 
-def residual_plot(model , X_train ,X_test, y_train,y_test):    
+def residual_plot(model , X_train ,X_test, y_train,y_test , Min ,Max):    
      y_train_pred = model.predict(X_train)    
      y_test_pred = model.predict(X_test)       
      # Create a residual plot     
@@ -77,7 +78,7 @@ def residual_plot(model , X_train ,X_test, y_train,y_test):
      plt.xlabel('Predicted values')     
      plt.ylabel('Residuals')     
      plt.legend(loc='upper left')     
-     plt.hlines(y=0, xmin=0,xmax=700, lw=2, color='red')     
+     plt.hlines(y=0, xmin=Min,xmax=Max, lw=2, color='red')     
      plt.show()      
      # Create a residual histogram using seaborn for the training set     
       
@@ -311,3 +312,29 @@ def  ElasticNet_hyperparameter(X_train, y_train):
     # create ElasticNet_best using best parameters
     enet_best = ElasticNet(**grid_search.best_params_)
     return enet_best
+
+
+
+'''--------------------------------------RandomForest----------------------------------------------'''
+
+def rf_hyperparameter(X_train, y_train):
+    hyperparameter = {
+    'n_estimators': [50, 100, 200],
+    'max_depth': [3, 5, 7],
+    'min_samples_split': [2, 4, 8],
+    'min_samples_leaf': [1, 2, 4],
+    'max_features': ['sqrt', 'log2']
+    }
+    
+    rf = RandomForestRegressor()
+
+    grid_search  = GridSearchCV(rf , hyperparameter , cv =5 ,scoring = 'r2' ,verbose=4 )
+    grid_search.fit(X_train, y_train)
+
+    # Print best parameters and best score
+    print('Best Parameters:', grid_search.best_params_)
+    print('Best Score:', grid_search.best_score_)
+
+    # create rf_best using best parameters
+    rf_best = RandomForestRegressor(**grid_search.best_params_)
+    return rf_best
