@@ -6,7 +6,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, RBF , ExpSineSquared , WhiteKernel ,Matern,Sum,Product
 from sklearn.model_selection import train_test_split ,GridSearchCV, RandomizedSearchCV
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score ,accuracy_score
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedShuffleSplit
 import seaborn as sns
@@ -15,7 +15,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.linear_model import ElasticNet
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor,RandomForestClassifier
 
 
 import math
@@ -323,9 +323,33 @@ def  ElasticNet_hyperparameter(X_train, y_train):
 
 
 
-'''--------------------------------------RandomForest----------------------------------------------'''
+'''--------------------------------------RandomForestR----------------------------------------------'''
 
 def rf_hyperparameter(X_train, y_train):
+    rfc = RandomForestClassifier(random_state=42)
+
+    # Define the hyperparameter space
+    hyperparameter = {
+        'n_estimators': [50, 100, 200],
+        'max_depth': [None, 5, 7,9],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4],
+        'criterion': ['gini', 'entropy']
+        }
+    grid_search  = GridSearchCV(rfc , hyperparameter , cv =5 ,scoring = 'r2' ,verbose=4 )
+    grid_search.fit(X_train, y_train)
+
+    # Print best parameters and best score
+    print('Best Parameters:', grid_search.best_params_)
+    print('Best Score:', grid_search.best_score_)
+
+    # create rfc_best using best parameters
+    rfc_best = RandomForestRegressor(**grid_search.best_params_)
+    return rfc_best
+
+'''--------------------------------------RandomForestC----------------------------------------------'''
+
+def rf_c_hyperparameter(X_train, y_train):
     hyperparameter = {
     'n_estimators': [50, 100, 200],
     'max_depth': [3, 5, 7],
