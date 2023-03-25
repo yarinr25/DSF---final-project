@@ -207,27 +207,35 @@ def Tree_hyperparameters(X_train, y_train):
   
 def gp_hyperparameters(X_train, y_train):
     # Define the kernels to test
-    kernels = [Sum(ConstantKernel(1.0, (1e-3, 1e3))*RBF(length_scale=1.0, length_scale_bounds=(1e-2, 1e2)),
+    kernels = [RBF(length_scale=1.0, length_scale_bounds=(1e-2, 1e2)),
+                Sum(ConstantKernel(1.0, (1e-3, 1e3))*RBF(length_scale=1.0, length_scale_bounds=(1e-2, 1e2)),
                 ExpSineSquared(length_scale=1.0, length_scale_bounds=(1e-2, 1e2))),
                Sum(ConstantKernel(1.0, (1e-3, 1e3))*RBF(length_scale=1.0, length_scale_bounds=(1e-2, 1e2)),
                 WhiteKernel(noise_level=1e-2))]
 
     # Define the hyperparameters for each kernel
-    hyperparameters = [{'kernel__k1__k1__constant_value': [0.1, 1, 10],
+    hyperparameters = [{'kernel__length_scale': [0.1, 1, 10],
+                        "alpha": [0.1, 1.0]},
+                       {'kernel__k1__k1__constant_value': [0.1, 1, 10],
                         'kernel__k1__k2__length_scale': [0.1, 1, 10],
                         'kernel__k2__length_scale': [0.1, 1, 5],
                         'kernel__k2__periodicity':[0.1, 1, 10],
-                        "alpha": [0.01, 0.1, 1.0]},
+                        "alpha": [0.1, 1.0]},
                        {"kernel__k1__k1__constant_value": [1.0, 5.0, 10.0],
                         "kernel__k1__k2__length_scale": [1.0, 5.0, 10.0],
                         "kernel__k2__noise_level": [1e-4, 1e-3, 1e-2],
                         "alpha": [0.01, 0.1, 1.0]}]
-
+    kernel =[ RBF()]
+    # Define the parameter grid for the model
+    hyperparameters = [{
+                        'kernel': [kernel],
+                        'alpha': np.logspace(-5, 0, 6),
+                        'normalize_y': [True, False]}]
     # Perform cross-validation to tune the hyperparameters
     best_score = -np.inf
     for i, kernel in enumerate(kernels):
         gp = GaussianProcessRegressor(kernel=kernel)
-        Random_search  = RandomizedSearchCV(gp, hyperparameters[i],scoring='r2',verbose=5, cv=2, n_iter = 25)
+        Random_search  = RandomizedSearchCV(gp, hyperparameters[i],scoring='r2',verbose=5, cv=3, n_iter = 25)
         Random_search.fit(X_train, y_train)
         if Random_search.best_score_ > best_score:
             best_score = Random_search.best_score_
