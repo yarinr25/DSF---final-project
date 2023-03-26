@@ -16,6 +16,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.linear_model import ElasticNet
 from sklearn.ensemble import RandomForestRegressor,RandomForestClassifier
+from sklearn.metrics import roc_auc_score,confusion_matrix, classification_report, accuracy_score,roc_curve,auc
+from xgboost import XGBClassifier
 
 
 import math
@@ -346,27 +348,66 @@ def rf_hyperparameter(X_train, y_train):
     # create rfc_best using best parameters
     rfc_best = RandomForestRegressor(**grid_search.best_params_)
     return rfc_best
+'''--------------------------------------Classification-Evaluate----------------------------------------------'''
+def classifier_evaluate(model , X_train ,X_test, y_train,y_test):
+    y_pred = model.predict(X_test)
+    model_accuracy = accuracy_score(y_pred, y_test)
+    
+    conf_mat = pd.DataFrame(confusion_matrix(y_test, y_pred))  
+    fig = plt.figure(figsize=(10, 7))  
+    sns.heatmap(conf_mat, annot=True, annot_kws={"size": 16}, fmt="g")  
+    plt.title("Confusion Matrix")  
+    plt.xlabel("Predicted Label")  
+    plt.ylabel("True Label")  
+    plt.show()
+    
+    print(classification_report(y_test, y_pred))
 
-'''--------------------------------------RandomForestC----------------------------------------------'''
+    y_predicted = getattr(model, "predict")(X_test)  
+   
+     # The line below is equivalent to  
+     # y_predicted_proba = model.predict_proba(X_test)  
+    y_predicted_proba = getattr(model, "predict_proba")(X_test)  
+       
+    auc_roc = roc_auc_score(y_test, y_predicted)  
+    fpr, tpr, thresholds = roc_curve(y_test, y_predicted_proba[:,1])  
+   
+    plt.plot(fpr, tpr, color="red", lw=2,label=f"Classifier (area = {auc_roc:0.5f})")  
+    plt.plot([0, 1], [0, 1], color="black", lw=2, linestyle="--",label="Mean model (area = 0.500)")  
+    plt.xlim([0.0, 1.0])  
+    plt.ylim([0.0, 1.05])  
+    plt.xlabel("False Positive Rate")  
+    plt.ylabel("True Positive Rate")  
+    plt.title("Receiver operating characteristic")  
+    plt.legend(loc="lower right")  
+    plt.show()  
+   
+     # Calculate the auc score  
+    auc_score = auc(fpr, tpr)  
+    print(f"auc_score: {round(auc_score, 3)}.") 
+     
 
-def rf_c_hyperparameter(X_train, y_train):
+    
+
+'''--------------------------------------XGBClassifier----------------------------------------------'''
+
+def XGB_classifier_hyperparameter(X_train, y_train):
     hyperparameter = {
-    'n_estimators': [50, 100, 200],
-    'max_depth': [3, 5, 7],
-    'min_samples_split': [2, 4, 8],
-    'min_samples_leaf': [1, 2, 4],
-    'max_features': ['sqrt', 'log2']
+    'learning_rate': [0.1, 0.2, 0.3],
+    'max_depth': [4, 5,6,7],
+    'n_estimators': [50, 100, 150]   
     }
     
-    rf = RandomForestRegressor()
+    xgb = XGBClassifier()
 
-    grid_search  = GridSearchCV(rf , hyperparameter , cv =5 ,scoring = 'r2' ,verbose=4 )
+    grid_search = GridSearchCV(xgb, hyperparameter, scoring='accuracy', verbose=5, cv=5)
+
     grid_search.fit(X_train, y_train)
 
     # Print best parameters and best score
     print('Best Parameters:', grid_search.best_params_)
     print('Best Score:', grid_search.best_score_)
 
-    # create rf_best using best parameters
-    rf_best = RandomForestRegressor(**grid_search.best_params_)
-    return rf_best
+    # create xgb_best using best parameters
+    xgb_best = XGBClassifier(**grid_search.best_params_)
+    return xgb_best
