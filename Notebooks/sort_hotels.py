@@ -112,6 +112,8 @@ def choose_comparison(h1, h2, site):
             return booking_compare(h1,h2)
         case 'Expedia':
             return expedia_compare(h1,h2)
+        case _:
+            return 1
 
 
 class HotelsSearch:
