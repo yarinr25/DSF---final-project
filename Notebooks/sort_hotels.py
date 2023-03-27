@@ -2,7 +2,8 @@ import random
 from xgboost import XGBClassifier
 import pandas as pd
 import joblib
-model = joblib.load('XGBC_Expedia.pkl')
+model_expedia = joblib.load('XGBC_Expedia.pkl')
+model_booking = joblib.load('XGBC_Booking.pkl')
 
 class Hotel:
     def __init__(self, row):
@@ -57,7 +58,7 @@ def expedia_compare(h1, h2):
    for col in diff_cols:
       compare_row[col] = 0
    compare_row = compare_row[model_cols]
-   return model.predict(compare_row)[0]
+   return model_expedia.predict(compare_row)[0]
 
 def booking_compare(h1, h2):
    
@@ -104,7 +105,7 @@ def booking_compare(h1, h2):
    for col in diff_cols:
       compare_row[col] = 0
    compare_row = compare_row[model_cols]
-   return model.predict(compare_row)[0]
+   return model_booking.predict(compare_row)[0]
     
 def choose_comparison(h1, h2, site):
     match site:
@@ -155,13 +156,13 @@ class HotelsSearch:
                 correct_sorts = correct_sorts+1
         return correct_sorts / len(self.shuffled_hotels)
     
-    def get_sort_rmse(self):
+    def get_sort_mse(self):
 
         sum_range = 0
         for i, h_p in enumerate(self.shuffled_hotels):
             for j , h_o in enumerate(self.hotels):
                 if h_p.compare(h_o):
-                    sum_range = sum_range+ abs(i-j) 
+                    sum_range = sum_range+ (i-j)**2 
                     break
 
 
